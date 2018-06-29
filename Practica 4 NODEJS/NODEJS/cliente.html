@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Cliente</title>
+    </head>
+
+    <body>
+        <h1>Cliente</h1>
+        Usuarios conectados: <div id="resultados"></div>
+		
+	<p>
+	    <h2>Temperatura</h2>
+	    
+	    <form action="javascript:void(0);" onsubmit="javascript:ACcontrol();">
+	        Termostato: <span id="termostato"></span> <br>
+	        Aire Acondicionado: <span id="ac">OFF</span>
+	        <input type="submit" value="On/Off" />
+	    </form>
+	</p>
+
+	<p>
+	    <h2>Luz</h2>
+	    
+	    <form action="javascript:void(0);" onsubmit="javascript:PControl(0);">
+	        Luminosidad: <span id="lumens"></span> <br>
+	        Persianas: <span id="persiana">Bajada</span>
+	        <input type="submit" value="Subir/Bajar" />
+	    </form>
+		<form action="javascript:void(0);" onsubmit="javascript:LuzControl();">
+            Luces: <span id="interruptor">OFF</span>
+            <input type="submit" value="On/Off" />
+        </form>
+        </p>
+	<p>
+	    <h2>Humedad</h2>
+	    
+	    <form action="javascript:void(0);" onsubmit="javascript:ASControl();">
+	        Humedad: <span id="humedad"></span> <br>
+	        Aspersor: <span id="aspersor">OFF</span>
+	        <input type="submit" value="On/Off" />
+	    </form>
+        </p>
+    </body>
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript">
+            var serviceURL = document.URL;
+            // Clientes
+            function actualizarLista(usuarios) {
+				var listContainer = document.getElementById('resultados');
+				listContainer.innerHTML = '';
+				var listElement = document.createElement('ul');
+				listContainer.appendChild(listElement);
+				var num = usuarios.length;
+				for(var i=0; i<num; i++) {
+			        var listItem = document.createElement('li');
+			        listItem.innerHTML = usuarios[i].identificador+":"+usuarios[i].address+":"+usuarios[i].port+":"+usuarios[i].recibidoCliente;
+			        listElement.appendChild(listItem);
+			    }
+            }
+
+            function PControl(tipo) {
+                var valor = document.getElementById("persiana").innerHTML;
+                var dato = 'Bajada';
+                console.log("T: " + tipo);
+                if(tipo == 1){
+                  var url = serviceURL + "/persiana/" + dato;
+                  var httpRequest = new XMLHttpRequest();
+                  httpRequest.onreadystatechange = function () {
+                      if (httpRequest.readyState === 4) {
+                          var resultado = document.getElementById("persiana");
+                          resultado.innerHTML = httpRequest.responseText;
+                      }
+                  };
+                  httpRequest.open("GET", url, true);
+                  httpRequest.send(null);
+                } else{
+                  if (valor === 'Bajada') {
+                      dato = 'Subida';
+                  } else if (valor === 'Subida') {
+                      dato = 'Bajada';
+                  }
+                  var url = serviceURL + "/persiana/" + dato;
+                  var httpRequest = new XMLHttpRequest();
+                  httpRequest.onreadystatechange = function () {
+                      if (httpRequest.readyState === 4) {
+                          var resultado = document.getElementById("persiana");
+                          resultado.innerHTML = httpRequest.responseText;
+                      }
+                  };
+                  httpRequest.open("GET", url, true);
+                  httpRequest.send(null);
+                }
+            }
+
+            function ACcontrol() {
+                var valor = document.getElementById("ac").innerHTML;
+                var dato = 'OFF';
+                console.log("ac: " + valor);
+                if (valor === 'OFF') {
+                    dato = 'ON';
+                } else if (valor === 'ON') {
+                    dato = 'OFF';
+                }
+                var url = serviceURL + "/ac/" + dato;
+                var httpRequest = new XMLHttpRequest();
+                httpRequest.onreadystatechange = function () {
+                    if (httpRequest.readyState === 4) {
+                        var resultado = document.getElementById("ac");
+                        resultado.innerHTML = httpRequest.responseText;
+                    }
+                };
+                httpRequest.open("GET", url, true);
+                httpRequest.send(null);
+            }
+
+			function ASControl() {
+                var valor = document.getElementById("aspersor").innerHTML;
+                var dato = 'OFF';
+                console.log("aspersor: " + valor);
+                if (valor === 'OFF') {
+                    dato = 'ON';
+                } else if (valor === 'ON') {
+                    dato = 'OFF';
+                }
+                var url = serviceURL + "/aspersor/" + dato;
+                var httpRequest = new XMLHttpRequest();
+                httpRequest.onreadystatechange = function () {
+                    if (httpRequest.readyState === 4) {
+                        var resultado = document.getElementById("aspersor");
+                        resultado.innerHTML = httpRequest.responseText;
+                    }
+                };
+                httpRequest.open("GET", url, true);
+                httpRequest.send(null);
+            }
+
+
+            function LuzControl() {
+                var valor = document.getElementById("interruptor").innerHTML;
+                var dato = 'OFF';
+                console.log("interruptor : " + valor);
+                if (valor === 'OFF') {
+                    dato = 'ON';
+                } else if (valor === 'ON') {
+                    dato = 'OFF';
+                }
+                var url = serviceURL + "/interruptor/" + dato;
+                var httpRequest = new XMLHttpRequest();
+                httpRequest.onreadystatechange = function () {
+                    if (httpRequest.readyState === 4) {
+                        var resultado = document.getElementById("interruptor");
+                        resultado.innerHTML = httpRequest.responseText;
+                    }
+                };
+                httpRequest.open("GET", url, true);
+                httpRequest.send(null);
+            }
+
+			function actualizarInformacion(data) {
+
+				var resultado = document.getElementById("termostato").innerHTML = data.temp;
+				var resultado = document.getElementById("lumens").innerHTML = data.luz;
+				var resultado = document.getElementById("humedad").innerHTML = data.humedad;
+		
+			}
+
+            function Alertas(code) {
+                var item = 0;
+                if (code === 1) {
+                    item = "Temperatura demasiado elevada";
+
+                } else if (code === 2) {
+                    item = "Luminosidad demasiado baja";
+					PControl(0);
+                } else if (code === 3) {
+                    item = "Luminosidad demasiado alta";
+					PControl(1);
+                } else if (code === 4){
+                    item = "Temperatura demasiado baja";
+                } else if (code === 5){
+                    item = "Humedad demasiado baja para la temperatura actual";
+					document.getElementById("aspersor").innerHTML = "ON";
+                }
+                console.log("alerta:" + code + " = " + item);
+                alert(item);
+
+            }
+
+            var serviceURL = document.URL;
+			var serviceURLacortada = serviceURL.split('/cliente')[0];
+            console.log("cc:" + serviceURLacortada);
+            var socket = io.connect(serviceURLacortada);
+
+			var dateTime = new Date();
+
+			socket.on('connect', function(){
+				socket.emit('output-evt', dateTime);
+			});
+
+			socket.on('all-update', function(data) {
+				actualizarInformacion(data);
+			});
+            socket.on('disconnect', function() {
+				socket.emit('desconectar-cliente', dateTime);
+			});
+			
+			socket.on('all-connections', function(data) {
+				actualizarLista(data);
+			});
+
+            socket.on('warning_alert', function (code) {
+                Alertas(code);
+            });
+    </script>
+</html>

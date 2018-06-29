@@ -1,0 +1,123 @@
+<html>
+
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Sensor</title>
+    </head>
+
+    <body>
+        <h1>Sensor</h1>
+        Usuarios conectados: <div id="resultados"></div>
+
+	<p>
+	    <h2>Temperatura</h2>
+	    <form action="javascript:void(0);" onsubmit="javascript:enviar('temp');">
+	        Termostato: <input type="label" id="val1" /> <br>
+			Termostato: <span id="termostato"></span> <br>
+	        <input type="submit" value="Actualizar" />
+	    </form>
+	</p>
+	<p>
+	    <h2>Luz</h2>
+	    <form action="javascript:void(0);" onsubmit="javascript:enviar('luz');">
+	        Lumens: <input type="label" id="val2" /> <br>
+			Luminosidad: <span id="lumens"></span> <br>
+	        <input type="submit" value="Actualizar" />
+	    </form>
+        </p>
+	<p>
+		    <h2>Humedad</h2>
+		    <form action="javascript:void(0);" onsubmit="javascript:enviar('humedad');">
+		        Humedad: <input type="label" id="val3" /> <br>
+				Humedad: <span id="humedad"></span> <br>
+		        <input type="submit" value="Actualizar" />
+		    </form>
+        </p>
+
+    </body>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript">
+            var serviceURL = document.URL;
+			serviceURL = serviceURL.split('/sensor')[0];
+
+			// Clientes
+            function actualizarLista(usuarios) {
+				var listContainer = document.getElementById('resultados');
+				listContainer.innerHTML = '';
+				var listElement = document.createElement('ul');
+				listContainer.appendChild(listElement);
+				var num = usuarios.length;
+				for(var i=0; i<num; i++) {
+			        var listItem = document.createElement('li');
+			        listItem.innerHTML = usuarios[i].identificador+":"+usuarios[i].address+":"+usuarios[i].port+":"+usuarios[i].recibidoCliente;
+			        listElement.appendChild(listItem);
+			    }
+            }
+
+			// Sensores
+            function enviar(tipo) {
+                var val = 'temp';
+                if (tipo === 'temp') {
+                    val = document.getElementById("val1").value;
+                } else if (tipo === 'luz') {
+                    val = document.getElementById("val2").value;
+                } else if (tipo === 'humedad') {
+                    val = document.getElementById("val3").value;
+                }
+                var url = serviceURL + "/" + tipo + "/" + val;
+                var httpRequest = new XMLHttpRequest();
+                httpRequest.onreadystatechange = function () {
+                    if (httpRequest.readyState === 4) {
+                        if (tipo === 'temp')
+                            var resultado = document.getElementById("termostato");
+                        else if (tipo === 'luz')
+                            var resultado = document.getElementById("lumens");
+			else if (tipo === 'humedad')
+                            var resultado = document.getElementById("humedad");
+                        resultado.innerHTML = httpRequest.responseText;
+                    }
+                };
+
+                var d = new Date();
+                if (tipo === 'temp')
+                    socket.emit('add_historial', {tipo: "temp", temp: val, time: d});
+                else if (tipo === 'luz')
+                    socket.emit('add_historial', {tipo: "luz", luz: val, time: d});
+		else if (tipo === 'humedad')
+                    socket.emit('add_historial', {tipo: "humedad", humedad: val, time: d});
+                httpRequest.open("GET", url, true);
+                httpRequest.send(null);
+            }
+
+			function actualizarInformacion(data) {
+
+				var resultado = document.getElementById("termostato").innerHTML = data.temp;
+				var resultado = document.getElementById("lumens").innerHTML = data.luz;
+				var resultado = document.getElementById("humedad").innerHTML = data.humedad;
+				
+			}
+
+			var serviceURL = document.URL;
+			var serviceURLacortada = serviceURL.split('/sensor')[0];
+            console.log("cc:" + serviceURLacortada);
+            var socket = io.connect(serviceURLacortada);
+            var dateTime = new Date();
+
+			socket.on('connect', function(){
+				socket.emit('output-evt', dateTime);
+			});
+			socket.on('all-connections', function(data) {
+				actualizarLista(data);
+			});
+		socket.on('all-update', function(data) {
+				actualizarInformacion(data);
+			});
+
+            socket.on('disconnect', function() {
+				socket.emit('desconectar-cliente', dateTime);
+			});
+    </script>
+
+
+</html>
