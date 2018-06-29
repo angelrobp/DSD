@@ -26,7 +26,7 @@ Contenido:
 ### Práctica 4 - Desarrollo de Sistema de Domótica con Node.js
 * [Enunciado de la Práctica](https://github.com/angelrobp/DSD/blob/master/Practica%204%20NODEJS/p4-nodejs.pdf)
 
-#### [Detalles de la Práctica]:
+#### Detalles de la Práctica:
 
 El servidor se lanza con el comando: nodejs servidor.js
 En el navegador existen dos tipos de interfaces:
